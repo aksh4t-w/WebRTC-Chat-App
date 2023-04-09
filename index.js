@@ -1,6 +1,20 @@
 const app = require('express')();
-const server = require('http').Server(app);
+// const server = require('http').Server(app);
 const cors = require('cors');
+
+
+
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
+const server = https.createServer(options, app);
+
+
 
 const io = require('socket.io')(server, {
   cors: {
@@ -8,6 +22,12 @@ const io = require('socket.io')(server, {
     method: ["GET", "POST"]
   }
 });
+
+/// Commands to generate certificate with OpenSSL ///
+// openssl genrsa -out key.pem
+// openssl req -new -key key.pem -out csr.pem
+// openssl x509 -req -days 9999 -in csr.pem -signkey key.pem -out cert.pem
+// rm csr.pem
 
 app.use(cors());
 

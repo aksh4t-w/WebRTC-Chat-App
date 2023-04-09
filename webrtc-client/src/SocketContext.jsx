@@ -1,10 +1,17 @@
 import React, { createContext, useState, useEffect, useRef } from 'react'
 import { io } from 'socket.io-client'
-import Peer from 'simple-peer'
+// import "./init"
+// import Peer from 'simple-peer'
+import Peer from "vite-compatible-simple-peer"
 
 const SocketContext = createContext()
 
-const socket = io('http://localhost:4000')
+const socket = io('https://webrtc-server-lecl.onrender.com/')
+
+// import global from 'global'
+// import * as process from "process";
+// global.process = process;
+
 
 const ContextProvider = ({ children }) => {
   const [stream, setStream] = useState(null)
@@ -23,10 +30,10 @@ const ContextProvider = ({ children }) => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
         setStream(currentStream)
-        
+
         myVideo.current.srcObject = currentStream;
       })
-
+      
       socket.on('me', (id) => {
         setMe(id)
       })
@@ -54,9 +61,12 @@ const ContextProvider = ({ children }) => {
   }
 
   const callUser = (idToCall) => {
+    console.log(idToCall)
+    
     const peer = new Peer({ initiator: true, trickle: false, stream })
 
     peer.on('signal', (data) => {
+      console.log("Signal", idToCall)
       socket.emit('callUser', { userToCall: idToCall, signalData: data, from: me, name })
     })
 
@@ -64,7 +74,7 @@ const ContextProvider = ({ children }) => {
       userVideo.current.srcObject = currentStream
     })
 
-    socket.on('callaccepted', (signal) => {
+    socket.on('callAccepted', (signal) => {
       setCallAccepted(true)
 
       peer.signal(signal)
